@@ -39,8 +39,8 @@ namespace WaterSortPuzzle
 
 		private static (bool, IEnumerable<Tube>) Solve(List<Tube> tubes, int depth)
 		{
-			Console.WriteLine($"{depth,4}.  Dbg Bfr: Solve-tubes:\n{Program.ToString(tubes)}");
-			var currTubes = new List<Tube>(tubes.Select(t => new Tube(t)));
+			//Console.WriteLine($"{new string('.', depth)}[10] {depth,4}.  Dbg Bfr: Solve-tubes:\n{Program.ToString(tubes)}");
+			var currTubes = new List<Tube>(tubes.Select(t => new Tube(t))).ToList();
 
 			// foreach tube from top-color
 			// foreach tube to (not = from)
@@ -51,7 +51,7 @@ namespace WaterSortPuzzle
 				if (frTopColor == Color.Empty) continue;		// If tube is empty it cannot be used as from-tube
 				if (frTopCount == Tube.LayerCount) continue;	// If tube is full of the same color then it cannot be used as from-tube
 
-				IEnumerable<(Tube toTube, (int emptyCount, Color topColor) emp)> toEmpties =
+				List<(Tube toTube, (int emptyCount, Color topColor) emp)> toEmpties =
 					currTubes
 					.Select(tot => (tot, tot.GetTopEmptyCount()))
 					.Where(t => {
@@ -69,28 +69,41 @@ namespace WaterSortPuzzle
 				var totalPotentialEmpty = toEmpties.Aggregate(0, (a, i) => a + i.emp.emptyCount);
 				if (frTopCount > totalPotentialEmpty) continue;
 
-				//		If frTopCount > totalPotentialEmpty do nothing
-				//		If frTopCount == totalPotentialEmpty then just go through toTubes
-				//		If frTopCount < totalPotentialEmpty then for each of the toTubes distribute the frTube layers
+				// If frTopCount > totalPotentialEmpty do nothing
+				// If frTopCount == totalPotentialEmpty then just go through toTubes
+				// If frTopCount < totalPotentialEmpty then for each of the toTubes distribute the frTube layers
 				if (frTopCount > totalPotentialEmpty) continue;
 				if (frTopCount == totalPotentialEmpty)
 				{
+					Console.WriteLine($"{new string('.', depth)}[20] {depth,4}.  Dbg Bfr: Solve-tubes:\n{Program.ToString(tubes)}");
 					var layersMoved = 0;
 					foreach (var emp in toEmpties)
 						layersMoved += Tube.Pour(frTube, emp.toTube);
 					if (layersMoved != frTopCount)
-						throw new Exception($"Total layers (of color {frTopColor}) that frTube ({frTube.Id}) could move is: {frTopColor}.  Total moved: {layersMoved}");
+						throw new Exception($"Total layers (of color {frTopColor}) that frTube ({frTube.Id}) could move is: {frTopCount}.  Total moved: {layersMoved}");
 
 					if (IsDone(currTubes)) return (true, currTubes);
 					if (IsStuck(currTubes)) return (false, currTubes);
 					Solve(currTubes, depth + 1);
-					Console.WriteLine($"{depth,4}.  Dbg Aft: Solve-tubes:\n{Program.ToString(currTubes)}");
+					//Console.WriteLine($"{new string('.', depth)}[30] {depth,4}.  Dbg Aft: Solve-tubes:\n{Program.ToString(currTubes)}");
 				}
 				else                        // frTopCount < totalPotentialEmpty
 				{
-					foreach (var emp in toEmpties)
+					var permutations = toEmpties.GetPermutations().ToList();
+					foreach (var empties in permutations)
 					{
+						currTubes = new List<Tube>(tubes.Select(t => new Tube(t))).ToList();
+						Console.WriteLine($"{new string('.', depth)}[40] {depth,4}.  Dbg Bfr: Solve-tubes:\n{Program.ToString(tubes)}");
+						var layersMoved = 0;
+						foreach (var emp in empties)
+							layersMoved += Tube.Pour(frTube, emp.toTube);
+						if (layersMoved != frTopCount)
+							throw new Exception($"Total layers (of color {frTopColor}) that frTube ({frTube.Id}) could move is: {frTopCount}.  Total moved: {layersMoved}");
 
+						if (IsDone(currTubes)) return (true, currTubes);
+						if (IsStuck(currTubes)) return (false, currTubes);
+						Solve(currTubes, depth + 1);
+						//Console.WriteLine($"{new string('.', depth)}[50] {depth,4}.  Dbg Aft: Solve-tubes:\n{Program.ToString(currTubes)}");
 					}
 				}
 			}
