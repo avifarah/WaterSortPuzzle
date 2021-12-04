@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 
 namespace WaterSortPuzzle
@@ -21,6 +22,6 @@ namespace WaterSortPuzzle
 	        }
 		}
 
-		public static string ToString(IEnumerable<Tube> tubes) => string.Join(Environment.NewLine, tubes);
+		public static string ToString(IEnumerable<Tube> tubes) => string.Join(Environment.NewLine + "\t", tubes);
     }
 }

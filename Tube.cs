@@ -1,4 +1,6 @@
+#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace WaterSortPuzzle
@@ -107,6 +109,40 @@ namespace WaterSortPuzzle
 
             Console.WriteLine($"\tDbg: from {frTube.Id,2}({frTopColor}[{layersToMove}]) -> to {toTube.Id,2}");
             return layersToMove;
+        }
+
+        public static int Pour(Tube frTube, Tube toTube, List<Tube> workingTubes)
+        {
+            var (frTopColor, frTopColorCount) = frTube.GetTopColor();
+
+            // frTube is full of the same color then it is immovable
+            if ((frTopColor, frTopColorCount) == (Color.Empty, LayerCount)) return 0;
+
+            // Invariant: there are frTopColorCount top color of frTube
+
+            var (toEmptyCount, toEmptyColor) = toTube.GetTopEmptyCount();
+
+            // If colors of toTube and frTube are not (same or empty) then no go
+            if (frTopColor != toEmptyColor && toEmptyColor != Color.Empty) return 0;
+
+            var layersToMove = Math.Min(frTopColorCount, toEmptyCount);
+            var toWorkingTube = GetWorkingTube(toTube, workingTubes);
+            var rc = toWorkingTube.Add(frTopColor, layersToMove);
+            if (!rc) return 0;
+
+            var fromWorkingTube = GetWorkingTube(frTube, workingTubes);
+            fromWorkingTube.Remove(layersToMove);
+
+            Console.WriteLine($"\tDbg: from {frTube.Id,2}({frTopColor}[{layersToMove}]) -> to {toTube.Id,2}");
+            return layersToMove;
+        }
+
+        private static Tube GetWorkingTube(Tube tube, List<Tube> workingTubes)
+        {
+            foreach (var wt in workingTubes)
+                if (wt.Id == tube.Id) return wt;
+
+            throw new Exception($"Tube {tube.Id} cannot be found in the workingTubes set");
         }
 
         private bool Add(Color color, int count)
@@ -251,6 +287,9 @@ namespace WaterSortPuzzle
 
         #endregion
 
-        public override string ToString() => $"{Id,3}: {_layer[DeepBottom],12} {_layer[MidBottom],12} {_layer[MidTop],12} {_layer[HighTop],12}";
+        public override string ToString() => $"{Id,3}: {ColorPrinted(_layer[DeepBottom])} {ColorPrinted(_layer[MidBottom])} {ColorPrinted(_layer[MidTop])} {ColorPrinted(_layer[HighTop])}";
+
+        private string ColorPrinted(Color color)
+            => color == Color.Empty ? $"{new string(' ', 11)}-" : $"{color.ToString(),12}";
     }
 }

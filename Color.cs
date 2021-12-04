@@ -12,7 +12,7 @@ namespace WaterSortPuzzle
         DarkBrown,
         ForestGreen,
         Grey,
-        Hunter,
+        Chateau,
         LightBlue,
         LightGreen,
         Pink,
